@@ -1,0 +1,6 @@
+pydantic
+langgraph
+langchain
+langchain-core
+typing-extensions
+tavily
