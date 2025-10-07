@@ -13,14 +13,18 @@ from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage, fi
 from langchain.chat_models import init_chat_model
 
 from state_research import ResearcherState, ResearcherOutputState
-from utils import tavily_search, get_today_str, think_tool
+from utils import tavily_search, get_today_str, think_tool, ask_gpt_5
 # from prompts import research_agent_prompt, compress_research_system_prompt, compress_research_human_message
 from PromptManager import PromptManager
 
 # ===== CONFIGURATION =====
 
 # Set up tools and model binding
-tools = [tavily_search, think_tool]
+tools = [
+    tavily_search,
+    think_tool,
+    ask_gpt_5
+]
 tools_by_name = {tool.name: tool for tool in tools}
 
 # Initialize models

@@ -43,6 +43,7 @@ def get_current_dir() -> Path:
 # ===== CONFIGURATION =====
 
 summarization_model = init_chat_model(model="openai:gpt-4.1-mini", api_key=os.environ.get('OPENAI_API_KEY'))
+gpt5_model = init_chat_model(model="openai:gpt-5", api_key=os.environ.get('OPENAI_API_KEY'))
 tavily_client = TavilyClient(os.environ.get('TAVILY_API_KEY'))
 
 # ===== SEARCH FUNCTIONS =====
@@ -185,14 +186,14 @@ def format_search_output(summarized_results: dict) -> str:
 @tool(parse_docstring=True)
 def tavily_search(
     query: str,
-    max_results: Annotated[int, InjectedToolArg] = 3,
+    max_results: int = 5,
     topic: Annotated[Literal["general", "news", "finance"], InjectedToolArg] = "general",
 ) -> str:
     """Fetch results from Tavily search API with content summarization.
 
     Args:
         query: A single search query to execute
-        max_results: Maximum number of results to return
+        max_results: Maximum number of results to return (default: 5, can request 3-10 depending on depth needed)
         topic: Topic to filter results by ('general', 'news', 'finance')
 
     Returns:
@@ -219,11 +220,11 @@ def tavily_search(
 def think_tool(reflection: str) -> str:
     """Tool for strategic reflection on research progress and decision-making.
 
-    Use this tool after each search to analyze results and plan next steps systematically.
+    Use this tool after each research step to analyze results and plan next steps systematically.
     This creates a deliberate pause in the research workflow for quality decision-making.
 
     When to use:
-    - After receiving search results: What key information did I find?
+    - After receiving research results: What key information did I find?
     - Before deciding next steps: Do I have enough to answer comprehensively?
     - When assessing research gaps: What specific information am I still missing?
     - Before concluding research: Can I provide a complete answer now?
@@ -241,3 +242,22 @@ def think_tool(reflection: str) -> str:
         Confirmation that reflection was recorded for decision-making
     """
     return f"Reflection recorded: {reflection}"
+
+@tool(parse_docstring=True)
+def ask_gpt_5(query: str) -> str:
+    """Send a query to GPT-5 and get a response.
+
+    Use this tool when you need advanced reasoning or analysis from GPT-5.
+    This is useful for complex questions, deep analysis, or tasks requiring
+    sophisticated language understanding.
+
+    Args:
+        query: The question or prompt to send to GPT-5
+
+    Returns:
+        GPT-5's response to the query
+    """
+    response = gpt5_model.invoke([HumanMessage(content=query)])
+    # print('GPT-5 response: ', response.content)
+    # print('available keys: ', response.keys())
+    return response.content
