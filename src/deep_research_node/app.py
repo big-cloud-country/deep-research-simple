@@ -155,9 +155,16 @@ researcher_agent = agent_builder.compile()
 if __name__ == "__main__":
     # Basic runnable example showing how to create a prompt and invoke the graph
     from langchain_core.messages import HumanMessage
+    
+    prompt_manager = PromptManager()
+    geologic_research_prompt_user = prompt_manager.get_prompt("geologic_research_prompt_user", "v1.0.0")
+    latitude = '34.134097'
+    longitude = '-81.638175'
+    prior_land_use = 'agricultural'
+    site_name = 'Saluda'
 
-    user_prompt = os.environ.get("RESEARCH_PROMPT") or "What are the key differences between CRDTs and Operational Transform?"
-
+    # user_prompt = os.environ.get("RESEARCH_PROMPT") or "What are the key differences between CRDTs and Operational Transform?"
+    user_prompt = geologic_research_prompt_user.render(latitude=latitude, longitude=longitude, prior_land_use=prior_land_use, site_name=site_name)
     initial_state = {
         "researcher_messages": [HumanMessage(content=user_prompt)],
         "tool_call_iterations": 0,
