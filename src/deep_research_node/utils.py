@@ -186,7 +186,7 @@ def format_search_output(summarized_results: dict) -> str:
 @tool(parse_docstring=True)
 def tavily_search(
     query: str,
-    max_results: int = 8,
+    max_results: int = 1,
     topic: Annotated[Literal["general", "news", "finance"], InjectedToolArg] = "general",
 ) -> str:
     """Fetch results from Tavily search API with content summarization.
@@ -201,7 +201,7 @@ def tavily_search(
     """
     # Execute search for single query
     search_results = tavily_search_multiple(
-        [query],  # Convert single query to list for the internal function
+        [query[:399]],  # Convert single query to list for the internal function
         max_results=max_results,
         topic=topic,
         include_raw_content=True,

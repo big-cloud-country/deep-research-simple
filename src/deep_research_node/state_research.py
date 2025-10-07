@@ -38,6 +38,7 @@ class ResearcherOutputState(TypedDict):
     compressed_research: str
     raw_notes: Annotated[List[str], operator.add]
     researcher_messages: Annotated[Sequence[BaseMessage], add_messages]
+    qa_report: str
 
 # ===== STRUCTURED OUTPUT SCHEMAS =====
 

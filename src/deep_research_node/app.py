@@ -32,6 +32,7 @@ model = init_chat_model(model="openai:gpt-4.1")
 model_with_tools = model.bind_tools(tools)
 summarization_model = init_chat_model(model="openai:gpt-4.1-mini")
 compress_model = init_chat_model(model="openai:gpt-4.1", max_tokens=32000) # model="anthropic:claude-sonnet-4-20250514", max_tokens=64000
+qa_model = init_chat_model(model="anthropic:claude-sonnet-4-20250514", max_tokens=64000)
 
 # ===== AGENT NODES =====
 
@@ -105,6 +106,23 @@ def compress_research(state: ResearcherState) -> dict:
         "raw_notes": ["\n".join(raw_notes)]
     }
 
+def assess_quality(state: ResearcherState) -> dict:
+    """Assess the quality of the research findings.
+
+    Takes the compressed research and performs a quality assurance check
+    using the geologic QA prompt to evaluate the report.
+    """
+    prompt_manager = PromptManager()
+    geologic_qa_prompt = prompt_manager.get_prompt("geologic_qa_prompt_user", "v1.0.0")
+    qa_prompt_content = geologic_qa_prompt.render(research_report=state["compressed_research"])
+    
+    messages = [HumanMessage(content=qa_prompt_content)]
+    response = qa_model.invoke(messages)
+    
+    return {
+        "qa_report": str(response.content)
+    }
+
 # ===== ROUTING LOGIC =====
 
 def should_continue(state: ResearcherState) -> Literal["tool_node", "compress_research"]:
@@ -135,6 +153,7 @@ agent_builder = StateGraph(ResearcherState, output_schema=ResearcherOutputState)
 agent_builder.add_node("llm_call", llm_call)
 agent_builder.add_node("tool_node", tool_node)
 agent_builder.add_node("compress_research", compress_research)
+agent_builder.add_node("assess_quality", assess_quality)
 
 # Add edges to connect nodes
 agent_builder.add_edge(START, "llm_call")
@@ -147,7 +166,8 @@ agent_builder.add_conditional_edges(
     },
 )
 agent_builder.add_edge("tool_node", "llm_call") # Loop back for more research
-agent_builder.add_edge("compress_research", END)
+agent_builder.add_edge("compress_research", "assess_quality") # Go to quality assessment
+agent_builder.add_edge("assess_quality", END)
 
 # Compile the agent
 researcher_agent = agent_builder.compile()
@@ -171,6 +191,7 @@ if __name__ == "__main__":
         "research_topic": user_prompt,
         "compressed_research": "",
         "raw_notes": [],
+        "qa_report": "",
     }
 
     print("Starting research...\n")
@@ -178,6 +199,8 @@ if __name__ == "__main__":
 
     print("=== Compressed Research ===\n")
     print(result.get("compressed_research", ""))
+    print("\n=== QA Report ===\n")
+    print(result.get("qa_report", ""))
     # print("\n=== Raw Notes (truncated) ===\n")
     # raw_notes = "\n\n".join(result.get("raw_notes", [])).strip()
     # print(raw_notes[:2000] + ("..." if len(raw_notes) > 2000 else ""))

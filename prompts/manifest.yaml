@@ -15,6 +15,14 @@ prompts:
         date: "2025-10-07"
         author: "RobWhelan"
         status: "active"
+  geologic_qa_prompt_user:
+    description: "User prompt for geologic QA"
+    latest: "v1.0.0"
+    versions:
+      - version: "v1.0.0"
+        date: "2025-10-07"
+        author: "RobWhelan"
+        status: "active"
   geologic_research_prompt_user:
     description: "User prompt for geologic research"
     latest: "v1.0.0"
