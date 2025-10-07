@@ -17,7 +17,9 @@ from langchain_core.tools import tool, InjectedToolArg
 from tavily import TavilyClient
 
 from state_research import Summary
-from prompts import summarize_webpage_prompt
+# from prompts import summarize_webpage_prompt
+from PromptManager import PromptManager
+
 
 # ===== UTILITY FUNCTIONS =====
 
@@ -86,12 +88,14 @@ def summarize_webpage_content(webpage_content: str) -> str:
         Formatted summary with key excerpts
     """
     try:
+        prompt_manager = PromptManager()
+        summarize_webpage_prompt = prompt_manager.get_prompt("summarize_webpage_prompt_user", "v1.0.0")
         # Set up structured output model for summarization
         structured_model = summarization_model.with_structured_output(Summary)
 
         # Generate summary
         summary = structured_model.invoke([
-            HumanMessage(content=summarize_webpage_prompt.format(
+            HumanMessage(content=summarize_webpage_prompt.render(
                 webpage_content=webpage_content, 
                 date=get_today_str()
             ))

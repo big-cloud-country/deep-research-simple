@@ -14,7 +14,8 @@ from langchain.chat_models import init_chat_model
 
 from state_research import ResearcherState, ResearcherOutputState
 from utils import tavily_search, get_today_str, think_tool
-from prompts import research_agent_prompt, compress_research_system_prompt, compress_research_human_message
+# from prompts import research_agent_prompt, compress_research_system_prompt, compress_research_human_message
+from PromptManager import PromptManager
 
 # ===== CONFIGURATION =====
 
@@ -39,6 +40,8 @@ def llm_call(state: ResearcherState):
 
     Returns updated state with the model's response.
     """
+    prompt_manager = PromptManager()
+    research_agent_prompt = prompt_manager.get_prompt("research_agent_prompt_user", "v1.0.0").render(date=get_today_str())
     return {
         "researcher_messages": [
             model_with_tools.invoke(
@@ -78,8 +81,10 @@ def compress_research(state: ResearcherState) -> dict:
     Takes all the research messages and tool outputs and creates
     a compressed summary suitable for the supervisor's decision-making.
     """
-
-    system_message = compress_research_system_prompt.format(date=get_today_str())
+    prompt_manager = PromptManager()
+    compress_research_system_prompt = prompt_manager.get_prompt("compress_research_prompt_system", "v1.0.0")
+    system_message = compress_research_system_prompt.render(date=get_today_str())
+    compress_research_human_message = prompt_manager.get_prompt("compress_research_prompt_user", "v1.0.0").render(research_topic=state["research_topic"])
     messages = [SystemMessage(content=system_message)] + state.get("researcher_messages", []) + [HumanMessage(content=compress_research_human_message)]
     response = compress_model.invoke(messages)
 
@@ -162,6 +167,7 @@ if __name__ == "__main__":
 
     print("=== Compressed Research ===\n")
     print(result.get("compressed_research", ""))
-    print("\n=== Raw Notes (truncated) ===\n")
-    raw_notes = "\n\n".join(result.get("raw_notes", [])).strip()
-    print(raw_notes[:2000] + ("..." if len(raw_notes) > 2000 else ""))
+    # print("\n=== Raw Notes (truncated) ===\n")
+    # raw_notes = "\n\n".join(result.get("raw_notes", [])).strip()
+    # print(raw_notes[:2000] + ("..." if len(raw_notes) > 2000 else ""))
+    print('available keys: ', result.keys())

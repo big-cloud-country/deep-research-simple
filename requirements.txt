@@ -2,5 +2,7 @@ pydantic
 langgraph
 langchain
 langchain-core
+langchain-openai
 typing-extensions
-tavily
+tavily-python
+python-frontmatter
